@@ -1,0 +1,11 @@
+{
+  "name": "شیفت‌یار | مدیریت کارکرد داروخانه",
+  "short_name": "شیفت‌یار",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7f7",
+  "theme_color": "#0f766e",
+  "description": "ثبت شیفت، محاسبه دستمزد و گزارش کارکرد داروخانه"
+}
