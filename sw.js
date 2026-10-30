@@ -1,24 +1,16 @@
-const CACHE = 'shiftyar-v3-redesign';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './supabase-config.js', './core.js', './exports.js', './holidays.js', './estedad-regular.ttf', './estedad-bold.ttf', './icon-180.png', './icon-192.png', './icon-512.png'];
-const assetURLs = new Set(ASSETS.map(path => new URL(path, self.registration.scope).href));
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
-});
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('shiftyar-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
-});
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET' || !assetURLs.has(event.request.url)) return;
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    try {
-      const response = await fetch(event.request);
-      if (response.ok) await cache.put(event.request, response.clone());
-      return response;
-    } catch (error) {
-      const cached = await cache.match(event.request);
-      if (cached) return cached;
+const CACHE = 'shiftyar-shell-v2';
+const ASSETS = ['./','./index.html','./styles.css','./boot.js','./app.bundle.js','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/regular.woff2','./assets/bold.woff2','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('shiftyar-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',event=>{
+  const url=new URL(event.request.url);
+  if(event.request.method!=='GET'||url.origin!==self.location.origin||!url.href.startsWith(self.registration.scope))return;
+  event.respondWith(caches.open(CACHE).then(async cache=>{
+    const stored=await cache.match(event.request);
+    if(stored)return stored;
+    try{return await fetch(event.request);}catch(error){
+      if(event.request.mode==='navigate')return cache.match('./index.html');
       throw error;
     }
-  })());
+  }));
 });

@@ -1,16 +1,17 @@
 {
-  "name": "شیفت‌یار | مدیریت کارکرد داروخانه",
+  "id": "./",
+  "name": "شیفت‌یار | مدیریت شیفت و کارکرد",
   "short_name": "شیفت‌یار",
+  "description": "دفتر شخصی شیفت‌ها و برنامه‌ریزی پرسنل داروخانه",
   "lang": "fa",
   "dir": "rtl",
   "start_url": "./",
-  "display": "standalone",
   "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7f8",
+  "theme_color": "#187567",
   "icons": [
-    {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
-  ],
-  "background_color": "#f6f7fb",
-  "theme_color": "#5b4bdb",
-  "description": "ثبت شیفت، محاسبه دستمزد و گزارش کارکرد داروخانه"
+    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
 }

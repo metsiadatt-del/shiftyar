@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile, access } from 'node:fs/promises';
+import vm from 'node:vm';
+
+const root=new URL('../',import.meta.url);
+const code=await readFile(new URL('sw.js',root),'utf8');
+function worker(){const handlers={},stored=new Map();let assets=[],claimed=false;const cache={addAll:async list=>{assets=list;list.forEach(path=>stored.set(path,{path}));},match:async request=>stored.get(typeof request==='string'?request:request.url)};const context={URL,self:{location:{origin:'https://example.test'},registration:{scope:'https://example.test/shiftyar/'},clients:{claim:async()=>{claimed=true;}},addEventListener:(name,handler)=>handlers[name]=handler},caches:{open:async()=>cache,keys:async()=>[],delete:async()=>true},fetch:async()=>{throw new Error('offline');}};vm.runInNewContext(code,context);return {handlers,getAssets:()=>assets,getClaimed:()=>claimed};}
+test('Service worker precaches every local app dependency',async()=>{const w=worker();let promise;w.handlers.install({waitUntil:p=>promise=p});await promise;for(const asset of w.getAssets())await access(new URL(asset,root));for(const required of ['./app.js','./spreadsheet.js','./vendor/fflate.js','./assets/regular.woff2'])assert.ok(w.getAssets().includes(required));});
+test('Offline navigation fallback works under GitHub Pages subdirectory',async()=>{const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;w.handlers.fetch({request:{url:'https://example.test/shiftyar/?offline=1',method:'GET',mode:'navigate'},respondWith:x=>p=x});assert.equal((await p).path,'./index.html');});
+test('Service worker ignores external requests',()=>{const w=worker();let called=false;w.handlers.fetch({request:{url:'https://other.test/file',method:'GET',mode:'cors'},respondWith:()=>called=true});assert.equal(called,false);});
+test('Install manifest uses relative scope and valid actual PNG icons',async()=>{const m=JSON.parse(await readFile(new URL('manifest.webmanifest',root)));assert.equal(m.scope,'./');assert.equal(m.start_url,'./');for(const icon of m.icons){const data=await readFile(new URL(icon.src,root));assert.equal(data.toString('hex',0,8),'89504e470d0a1a0a');const [width,height]=icon.sizes.split('x').map(Number);assert.equal(data.readUInt32BE(16),width);assert.equal(data.readUInt32BE(20),height);}});
+test('Responsive styles include small screens, safe areas, dark theme and print',async()=>{const css=await readFile(new URL('styles.css',root),'utf8');for(const rule of ['max-width:560px','max-width:850px','prefers-reduced-motion','safe-area-inset-bottom','[data-theme=dark]','@media print','[hidden]{display:none!important}'])assert.ok(css.includes(rule));});
