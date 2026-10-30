@@ -16,9 +16,9 @@ for (const selector of [':root', '[data-theme=dark]']) {
     }
   });
 }
-test('Light surfaces are warm and subdued; variable Persian fonts are shipped offline', async () => {
-  assert.ok(css.includes('--surface:#eeece1'));
-  assert.ok(css.includes('Estedad,Tahoma,sans-serif'));
+test('Cool tinted surfaces and alternate Persian font are shipped offline', async () => {
+  assert.ok(css.includes('--surface:#f4f7f8'));
+  assert.ok(css.includes('NotoArabic,Tahoma,sans-serif'));
   assert.ok(css.includes('font-weight:100 900'));
-  for (const file of ['estedad-arabic.woff2','estedad-latin.woff2','estedad-LICENSE.txt']) await access(new URL('../assets/'+file, import.meta.url));
+  for (const file of ['noto-arabic.woff2','noto-latin.woff2','noto-LICENSE.txt']) await access(new URL('../assets/'+file, import.meta.url));
 });

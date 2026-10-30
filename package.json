@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@fontsource-variable/estedad": "5.3.0",
+    "@fontsource-variable/noto-sans-arabic": "5.3.0",
     "@jalali-js/holidays": "0.4.2",
     "esbuild": "0.25.12",
     "fflate": "0.8.3",
