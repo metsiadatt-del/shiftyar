@@ -85,7 +85,7 @@ export function validateDB(d) {
   for(const k of ['pharmacies','deputies','staff','templates'])for(const v of d[k])if(!text(v.name,150)||!v.name.trim())fail();
   for(const p of d.pharmacies)if(!Number.isFinite(p.rate)||p.rate<0||p.rate>1e9)fail();
   for(const p of d.staff)for(const k of ['medical','national','payment','contact'])if(!text(p[k],300))fail();
-  for(const p of d.deputies)if(!text(p.contact,300))fail();
+  for(const p of d.deputies)for(const k of ['name','firstName','lastName','medical','national','payment','contact'])if(!text(p[k]??'',300))fail();
   for(const t of d.templates)if(!time(t.start)||!time(t.end))fail();
   for(const s of d.shifts)if(!iso(s.date)||!time(s.start)||!time(s.end)||!Number.isFinite(s.rate)||s.rate<0||s.rate>1e9||!text(s.note)||!d.pharmacies.some(p=>p.id===s.pharmacy)||!(s.person==='self'||d.deputies.some(p=>p.id===s.person)))fail();
   for(const k of ['holidays','assignments'])if(!d[k]||typeof d[k]!=='object'||Array.isArray(d[k])||Object.keys(d[k]).length>100000)fail();
