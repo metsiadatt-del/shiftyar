@@ -1,5 +1,5 @@
-const CACHE = 'shiftyar-v2-icons';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './supabase-config.js', './icon-180.png', './icon-192.png', './icon-512.png'];
+const CACHE = 'shiftyar-v3-redesign';
+const ASSETS = ['./', './index.html', './manifest.webmanifest', './supabase-config.js', './core.js', './exports.js', './holidays.js', './estedad-regular.ttf', './estedad-bold.ttf', './icon-180.png', './icon-192.png', './icon-512.png'];
 const assetURLs = new Set(ASSETS.map(path => new URL(path, self.registration.scope).href));
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
