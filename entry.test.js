@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { parseHTML } from 'linkedom';
 import { webcrypto } from 'node:crypto';
+import { nowParts, dateNumeric, duration } from '../core.js';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const boot = await readFile(new URL('../boot.js', import.meta.url), 'utf8');
@@ -39,6 +40,20 @@ test('Delivered bundle renders all main tabs in a file-protocol DOM without modu
     assert.ok(env.document.querySelector('#main h1').textContent);
   }
   assert.equal(env.registrations(), 0);
+});
+test('New shift and template default to 20:00–00:00 with today in Tehran', () => {
+  const env = setup();
+  vm.runInContext(bundle, env.context);
+  const click = selector => env.document.querySelector(selector).dispatchEvent(new env.window.Event('click', { bubbles: true }));
+  click('[data-action="navigate"][data-page="shift"]');
+  assert.equal(env.document.querySelector('[name="date"]').value, dateNumeric(nowParts().date));
+  assert.equal(env.document.querySelector('[name="start"]').value, '20:00');
+  assert.equal(env.document.querySelector('[name="end"]').value, '00:00');
+  assert.equal(duration('20:00', '00:00'), 4);
+  click('[data-action="navigate"][data-page="planning"]');
+  click('[data-action="plan-tab"][data-value="templates"]');
+  assert.equal(env.document.querySelector('[name="start"]').value, '20:00');
+  assert.equal(env.document.querySelector('[name="end"]').value, '00:00');
 });
 test('HTTPS launch still registers offline support', () => {
   const env = setup('https:');
