@@ -67,6 +67,20 @@ test('Weekly assignment repeats in the month and collision rolls back',async()=>
   click('[data-action="plan-tab"][data-value="calendar"]');const t=saved().templates[1].id;click(`[data-action="assign"][data-key$="|${t}"]`);
   await submit('#assignment-form',{person:saved().staff[0].id});assert.match(document.querySelector('#assignment-form .error-text').textContent,/تداخل/);assert.equal(Object.keys(saved().assignments).length,count);click('[data-action="close"]');
 });
+test('Planning saves, edits and removals retain the scroll container in normal and fullscreen views',async()=>{
+  for(const fullscreen of [false,true]){
+    if(fullscreen)click('[data-action="plan-fullscreen"]');
+    const board=document.querySelector('.plan-board-scroll'),slot=[...board.querySelectorAll('.plan-slot')].at(-2),selector=`[data-action="assign"][data-key="${slot.dataset.key}"]`;
+    board.scrollTop=930;board.scrollLeft=-45;
+    for(const end of ['18:00','19:00']){
+      click(selector);const form=document.querySelector('#assignment-form'),els=fields(form);Object.defineProperty(form,'elements',{value:els,configurable:true});els.custom.checked=true;change(els.custom);
+      await submit('#assignment-form',{person:saved().staff[0].id,start:'16:00',end});
+      assert.equal(modal.hasAttribute('open'),false);assert.equal(document.querySelector('.plan-board-scroll'),board);assert.equal(document.querySelector(selector),slot);assert.equal(board.scrollTop,930);assert.equal(board.scrollLeft,-45);assert.match(slot.textContent,new RegExp(end));
+    }
+    click(selector);click('[data-action="unassign"]');assert.equal(document.querySelector('.plan-board-scroll'),board);assert.equal(board.scrollTop,930);assert.equal(board.scrollLeft,-45);assert.ok(slot.classList.contains('unassigned'));
+  }
+  click('[data-action="plan-fullscreen"]');
+});
 test('Shift form supports dropdown dates, inline additions and retained draft',async()=>{
   click('[data-action="new-shift"]');
   const form=document.querySelector('#shift-form'),els=fields(form);Object.defineProperty(form,'elements',{value:els,configurable:true});
