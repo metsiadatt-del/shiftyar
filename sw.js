@@ -1,5 +1,5 @@
-const CACHE = 'shiftyar-shell-v10';
-const ASSETS = ['./','./index.html','./styles.css','./boot.js','./app.bundle.js','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/noto-arabic.woff2','./assets/noto-latin.woff2','./assets/vazirmatn-arabic.woff2','./assets/vazirmatn-latin.woff2','./assets/estedad-arabic.woff2','./assets/estedad-latin.woff2','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest'];
+const CACHE = 'shiftyar-shell-v11';
+const ASSETS = ['./','./index.html','./styles.css','./boot.js','./app.bundle.js','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/noto-arabic.woff2','./assets/noto-latin.woff2','./assets/vazirmatn-arabic.woff2','./assets/vazirmatn-latin.woff2','./assets/estedad-arabic.woff2','./assets/estedad-latin.woff2','./assets/background-wave.svg','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./manifest.webmanifest'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('shiftyar-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

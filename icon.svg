@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#F4AE52"/>
-      <stop offset="1" stop-color="#E8933A"/>
+      <stop offset="0" stop-color="#fb8b24"/>
+      <stop offset="1" stop-color="#fb8b24"/>
     </linearGradient>
     <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#FFFFFF"/>
@@ -12,22 +12,22 @@
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
   <path d="M96 360c94-46 214-52 320-6v46c0 62-50 112-112 112H208c-62 0-112-50-112-112z" fill="#D1EDD3" opacity=".55"/>
   <g>
-    <rect x="112" y="128" width="288" height="288" rx="56" fill="#24402C" opacity=".16" transform="translate(0 10)"/>
-    <rect x="112" y="128" width="288" height="288" rx="56" fill="url(#page)" stroke="#24402C" stroke-width="18"/>
-    <rect x="112" y="128" width="288" height="88" rx="56" fill="#24402C"/>
-    <rect x="112" y="170" width="288" height="46" fill="#24402C"/>
-    <rect x="186" y="98" width="30" height="72" rx="15" fill="#24402C"/>
-    <rect x="296" y="98" width="30" height="72" rx="15" fill="#24402C"/>
-    <g fill="#B7D894">
+    <rect x="112" y="128" width="288" height="288" rx="56" fill="#21232e" opacity=".16" transform="translate(0 10)"/>
+    <rect x="112" y="128" width="288" height="288" rx="56" fill="url(#page)" stroke="#21232e" stroke-width="18"/>
+    <rect x="112" y="128" width="288" height="88" rx="56" fill="#21232e"/>
+    <rect x="112" y="170" width="288" height="46" fill="#21232e"/>
+    <rect x="186" y="98" width="30" height="72" rx="15" fill="#21232e"/>
+    <rect x="296" y="98" width="30" height="72" rx="15" fill="#21232e"/>
+    <g fill="#105bff">
       <rect x="158" y="258" width="44" height="44" rx="12"/>
       <rect x="234" y="258" width="44" height="44" rx="12"/>
       <rect x="310" y="258" width="44" height="44" rx="12"/>
       <rect x="158" y="326" width="44" height="44" rx="12"/>
     </g>
-    <rect x="234" y="326" width="44" height="44" rx="12" fill="#F2842F"/>
+    <rect x="234" y="326" width="44" height="44" rx="12" fill="#fb8b24"/>
     <path d="M246 348l10 10 20-21" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
     <rect x="310" y="326" width="44" height="44" rx="12" fill="#D1EDD3"/>
   </g>
-  <circle cx="396" cy="118" r="46" fill="#F2842F" stroke="#FFFFFF" stroke-width="10"/>
+  <circle cx="396" cy="118" r="46" fill="#fb8b24" stroke="#FFFFFF" stroke-width="10"/>
   <path d="M396 92v32l22 14" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

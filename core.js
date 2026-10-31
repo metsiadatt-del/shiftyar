@@ -58,11 +58,10 @@ export function templateSlots(db,y,m) {
   }));
 }
 export function planningReport(db,y,m) {
-  const prev=m===1?{y:y-1,m:12}:{y,m:m-1};
-  const slots=[...templateSlots(db,prev.y,prev.m),...templateSlots(db,y,m)];
+  const slots=templateSlots(db,y,m);
   return db.staff.map(p=>{
     const t={...p,normal:0,night:0,holiday:0,total:0};
-    slots.filter(s=>s.person===p.id).forEach(s=>{const c=classify(s,db.holidays,monthRange(y,m));for(const k of ['normal','night','holiday','total'])t[k]+=c[k];});return t;
+    slots.filter(s=>s.person===p.id).forEach(s=>{const c=classify(s,db.holidays);for(const k of ['normal','night','holiday','total'])t[k]+=c[k];});return t;
   }).sort((a,b)=>b.total-a.total);
 }
 export function repeatDates(date,y,m,repeat,previous) {return monthDays(y,m).filter(d=>d===date || repeat&&weekday(d)===weekday(date)&&(previous||d>date));}
