@@ -104,7 +104,7 @@ test('Month letter marks holidays by colour and lets the user define them',async
   const date=holiday.dataset.date;click(`td[data-date="${date}"]`);click('[data-action="calendar-holiday"]');await submit('#holiday-form',{mode:'work'});
   assert.equal(saved().holidays[date],false);assert.ok(!document.querySelector(`td[data-date="${date}"]`).classList.contains('holiday-cell'));
 });
-test('Unified navy palette stays active without a theme switcher',()=>{assert.equal(document.documentElement.dataset.theme,'unified');assert.equal(document.querySelector('[data-action="theme"]'),null);});
+test('Theme selection persists independently from shift data',()=>{const before=storage.get('shiftyar-v1');assert.equal(document.documentElement.dataset.theme,'light');let select=document.querySelector('[data-theme-select]');value(select,'dark');change(select);assert.equal(document.documentElement.dataset.theme,'dark');assert.equal(storage.get('shiftyar-theme'),'dark');click('[data-action="navigate"][data-page="reports"]');select=document.querySelector('[data-theme-select]');assert.equal(select.value,'dark');value(select,'light');change(select);assert.equal(document.documentElement.dataset.theme,'light');assert.equal(storage.get('shiftyar-v1'),before);});
 test('All export choices exist including XLSX, Word and PDF print',()=>{click('[data-action="navigate"][data-page="calendar"]');for(const format of ['xlsx','csv','html','json','docx','pdf'])assert.ok(document.querySelector(`[data-format="${format}"]`));});
 test('Profile name updates across navigation and shift owner labels',async()=>{click('[data-action="navigate"][data-page="profile"]');await submit('#profile-form',{name:'سارا'});assert.equal(saved().profile.name,'سارا');click('[data-action="navigate"][data-page="shift"]');assert.match(document.querySelector('select[name="owner"]').textContent,/سارا/);});
 
@@ -147,6 +147,26 @@ test('Fixed whole-week shifts support leap months, 24 hours and independent depu
   await submit('#shift-form',{date:'1403/12/20',pharmacy:saved().pharmacies[0].id,owner:'deputy',deputy:saved().deputies[0].id,start:'08:00',end:'08:00'});
   const added=saved().shifts.slice(before);assert.equal(added.length,30);
   assert.deepEqual(added.map(s=>s.date),C.monthDays(1403,12));assert.ok(added.every(s=>s.person===saved().deputies[0].id));
+});
+
+test('Progressive disclosure keeps directory drafts and exposes contact details',()=>{
+ click('[data-action="navigate"][data-page="directory"]');
+ const panel=document.querySelector('.directory-add'),input=panel.querySelector('[name="firstName"]');
+ input.value='پیش‌نویس';panel.setAttribute('open','');panel.removeAttribute('open');panel.setAttribute('open','');assert.equal(input.value,'پیش‌نویس');
+ assert.ok(document.querySelector('.list-row details bdi'));assert.equal(panel.hasAttribute('open'),true);
+});
+test('Calendar supports keyboard selection and mobile summary without removing details',()=>{
+ click('[data-action="navigate"][data-page="calendar"]');
+ const cell=document.querySelector('td[data-date]'),date=cell.dataset.date;
+ assert.equal(cell.getAttribute('tabindex'),'0');assert.ok(cell.querySelector('.calendar-summary'));
+ const event=new window.Event('keydown',{bubbles:true,cancelable:true});Object.defineProperty(event,'key',{value:'Enter'});cell.dispatchEvent(event);
+ assert.equal(document.querySelector(`td[data-date="${date}"]`).getAttribute('aria-pressed'),'true');assert.ok(document.querySelector('.day-details'));
+});
+test('Calculations show totals before collapsed secondary details',()=>{
+ click('[data-action="navigate"][data-page="reports"]');
+ assert.equal(document.querySelectorAll('.stat').length,4);assert.equal(document.querySelectorAll('.secondary-section').length,2);
+ for(const section of document.querySelectorAll('.secondary-section'))assert.equal(section.hasAttribute('open'),false);
+ assert.ok(document.querySelector('.report-details'));assert.equal(document.querySelector('.table-wrap').getAttribute('role'),'region');
 });
 
 test('Detailed report shows actual end date and historical wages safely',()=>{

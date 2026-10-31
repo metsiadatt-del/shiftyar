@@ -9,13 +9,13 @@ import { nowParts, dateNumeric, duration } from '../core.js';
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const boot = await readFile(new URL('../boot.js', import.meta.url), 'utf8');
 const bundle = await readFile(new URL('../app.bundle.js', import.meta.url), 'utf8');
-function setup(protocol = 'file:') {
+function setup(protocol = 'file:', theme, dark = false) {
   const { window, document } = parseHTML(html);
-  const storage = new Map();
+  const storage = new Map(theme ? [['shiftyar-theme', theme]] : []);
   let registrations = 0;
   const context = vm.createContext({ window, document, console, Intl, Date, URL, Blob,
     location: { hash: '', protocol, reload() {} }, crypto: webcrypto, structuredClone,
-    matchMedia: () => ({ matches: false }), setTimeout, clearTimeout,
+    matchMedia: () => ({ matches: dark }), setTimeout, clearTimeout,
     localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
     navigator: { serviceWorker: { register: async () => { registrations++; } } }
   });
@@ -25,7 +25,7 @@ function setup(protocol = 'file:') {
 test('HTML loads ordered classic scripts, not file-blocked modules', () => {
   const { document } = parseHTML(html);
   const scripts = [...document.querySelectorAll('script[src]')];
-  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=18', 'app.bundle.js?v=18']);
+  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=19', 'app.bundle.js?v=19']);
   assert.ok(scripts.every(s => s.hasAttribute('defer') && s.type !== 'module'));
   assert.ok(document.querySelector('#startup').textContent.trim());
 });
@@ -55,6 +55,14 @@ test('New shift and template default to 20:00–00:00 with today in Tehran', () 
   assert.equal(env.document.querySelector('[name="start"]').value, '20:00');
   assert.equal(env.document.querySelector('[name="end"]').value, '00:00');
 });
+test('Bundle respects saved themes and falls back to system appearance',()=>{
+ for(const [saved,dark,expected] of [[undefined,true,'dark'],[undefined,false,'light'],['light',true,'light'],['dark',false,'dark'],['system',true,'dark']]){
+  const env=setup('file:',saved,dark);vm.runInContext(bundle,env.context);
+  assert.equal(env.document.documentElement.dataset.theme,expected);
+  assert.equal(env.document.querySelector('meta[name="theme-color"]').getAttribute('content'),expected==='dark'?'#111820':'#f6f8fa');
+ }
+});
+
 test('HTTPS launch still registers offline support', () => {
   const env = setup('https:');
   vm.runInContext(bundle, env.context);
