@@ -1,5 +1,5 @@
-const CACHE = 'shiftyar-shell-v16';
-const ASSETS = ['./','./index.html','./styles.css?v=16','./boot.js?v=16','./app.bundle.js?v=16','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/noto-arabic.woff2','./assets/noto-latin.woff2','./assets/vazirmatn-arabic.woff2','./assets/vazirmatn-latin.woff2','./assets/estedad-arabic.woff2','./assets/estedad-latin.woff2','./assets/background-wave.svg?v=16','./assets/icon.svg?v=16','./assets/icon-192.png?v=16','./assets/icon-512.png','./manifest.webmanifest?v=16'];
+const CACHE = 'shiftyar-shell-v17';
+const ASSETS = ['./','./index.html','./styles.css?v=17','./boot.js?v=17','./app.bundle.js?v=17','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/noto-arabic.woff2','./assets/noto-latin.woff2','./assets/vazirmatn-arabic.woff2','./assets/vazirmatn-latin.woff2','./assets/estedad-arabic.woff2','./assets/estedad-latin.woff2','./assets/background-wave.svg?v=17','./assets/icon.svg?v=17','./assets/icon-192.png?v=17','./assets/icon-512.png','./manifest.webmanifest?v=17'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('shiftyar-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

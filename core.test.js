@@ -58,7 +58,7 @@ test('Repeat is same weekday, bounded to month, with optional preceding weeks',(
 test('Planning templates, custom time and independent totals',()=>{
   const db=C.emptyDB();db.templates=[{id:'t',name:'شب',start:'22:00',end:'06:00'}];db.staff=[{id:'p',name:'پرسنل'}];
   const last=C.toISO(1405,7,30),first=C.toISO(1405,8,1);db.assignments[`${last}|t`]={person:'p',custom:false,start:'22:00',end:'06:00'};db.assignments[`${first}|t`]={person:'p',custom:true,start:'20:00',end:'23:00'};
-  assert.equal(C.templateSlots(db,1405,8).length,30);assert.equal(C.templateSlots(db,1405,8)[0].start,'20:00');assert.equal(C.planningReport(db,1405,8)[0].total,9);assert.equal(db.shifts.length,0);
+  assert.equal(C.templateSlots(db,1405,8).length,30);assert.equal(C.templateSlots(db,1405,8)[0].start,'20:00');assert.equal(C.planningReport(db,1405,8)[0].total,3);assert.equal(C.planningReport(db,1405,7)[0].total,8);assert.equal(db.shifts.length,0);
 });
 test('CSV escapes quotes, newlines and spreadsheet formulas',()=>{const s=C.csv(['نام','مبلغ'],[['=1+1',15],['a"b\nc',-2],[' @SUM(A1)',0]]);assert.ok(s.startsWith('\ufeff'));assert.ok(s.includes("\"'=1+1\""));assert.ok(s.includes('a""b\nc'));assert.ok(s.includes('"-2"'));});
 test('HTML escape protects notes and names',()=>{assert.equal(C.escape('<img src=x onerror="x">'),'&lt;img src=x onerror=&quot;x&quot;&gt;');});

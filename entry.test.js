@@ -25,7 +25,7 @@ function setup(protocol = 'file:') {
 test('HTML loads ordered classic scripts, not file-blocked modules', () => {
   const { document } = parseHTML(html);
   const scripts = [...document.querySelectorAll('script[src]')];
-  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js', 'app.bundle.js']);
+  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=17', 'app.bundle.js?v=17']);
   assert.ok(scripts.every(s => s.hasAttribute('defer') && s.type !== 'module'));
   assert.ok(document.querySelector('#startup').textContent.trim());
 });

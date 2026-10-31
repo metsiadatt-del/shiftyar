@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "شیفت‌یار | مدیریت شیفت و کارکرد",
-  "short_name": "شیفت‌یار",
+  "name": "FINAL MET SHIFTYAR",
+  "short_name": "FINAL MET SHIFTYAR",
   "description": "دفتر شخصی شیفت‌ها و برنامه‌ریزی پرسنل داروخانه",
   "lang": "fa",
   "dir": "rtl",
@@ -11,7 +11,17 @@
   "background_color": "#21232E",
   "theme_color": "#21232E",
   "icons": [
-    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
-    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
