@@ -29,7 +29,7 @@ test('Directory forms create pharmacy and deputy, reject negative rates',async()
   await submit('[data-directory="pharmacies"]',{name:'داروخانه تست',rate:'-1'});assert.match(document.querySelector('[data-directory="pharmacies"] .error-text').textContent,/نرخ/);
   await submit('[data-directory="pharmacies"]',{name:'داروخانه تست',rate:'۳۰۰٬۰۰۰'});
   assert.equal(saved().pharmacies[0].rate,300000);
-  await submit('[data-directory="deputies"]',{name:'همکار آزمایشی',contact:'09120000000'});assert.equal(saved().deputies.length,1);
+  await submit('[data-directory="deputies"]',{name:'همکار آزمایشی',contact:'09120000000'});assert.equal(saved().deputies.length,1);assert.ok(document.querySelector('[data-directory="deputies"] [name="medical"]'));
 });
 test('Shift creation persists rate and catches overlap',async()=>{
   click('[data-action="navigate"][data-page="shift"]');
@@ -65,6 +65,6 @@ test('Weekly assignment repeats in the month and collision rolls back',async()=>
   click('[data-action="plan-tab"][data-value="calendar"]');const t=saved().templates[1].id;click(`[data-action="assign"][data-key$="|${t}"]`);
   await submit('#assignment-form',{person:saved().staff[0].id});assert.match(document.querySelector('#assignment-form .error-text').textContent,/تداخل/);assert.equal(Object.keys(saved().assignments).length,count);click('[data-action="close"]');
 });
-test('Dark mode toggles without losing current form data',()=>{click('[data-action="theme"]');assert.equal(document.documentElement.dataset.theme,'dark');assert.equal(storage.get('shiftyar-theme'),'dark');click('[data-action="theme"]');assert.equal(document.documentElement.dataset.theme,'light');});
-test('All export choices exist including XLSX and PDF print',()=>{click('[data-action="navigate"][data-page="calendar"]');for(const format of ['xlsx','csv','html','json','pdf'])assert.ok(document.querySelector(`[data-format="${format}"]`));});
+test('Unified navy palette stays active without a theme switcher',()=>{assert.equal(document.documentElement.dataset.theme,'unified');assert.equal(document.querySelector('[data-action="theme"]'),null);});
+test('All export choices exist including XLSX, Word and PDF print',()=>{click('[data-action="navigate"][data-page="calendar"]');for(const format of ['xlsx','csv','html','json','docx','pdf'])assert.ok(document.querySelector(`[data-format="${format}"]`));});
 test('Profile name updates across navigation and shift owner labels',async()=>{click('[data-action="navigate"][data-page="profile"]');await submit('#profile-form',{name:'سارا'});assert.equal(saved().profile.name,'سارا');click('[data-action="navigate"][data-page="shift"]');assert.match(document.querySelector('select[name="owner"]').textContent,/سارا/);});

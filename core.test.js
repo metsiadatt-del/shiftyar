@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as C from '../core.js';
-import { spreadsheet } from '../spreadsheet.js';
+import { spreadsheet, wordDocument } from '../spreadsheet.js';
 import { unzipSync,strFromU8 } from '../vendor/fflate.js';
 
 const shift=(date,start='08:00',end='16:00')=>({date,start,end,rate:250000,person:'self'});
@@ -67,6 +67,7 @@ test('Backup validates shape and blocks unsafe photos/references/dates',()=>{
   assert.throws(()=>C.validateDB({version:1}));
   const db=C.emptyDB();db.profile.photo='javascript:alert(1)';assert.throws(()=>C.validateDB(db));db.profile.photo='';db.pharmacies=[{id:'p',name:'داروخانه',rate:100}];db.shifts=[{id:'s',pharmacy:'missing',person:'self',date:'2026-10-30',start:'08:00',end:'10:00',rate:10,note:''}];assert.throws(()=>C.validateDB(db));db.shifts[0].pharmacy='p';assert.equal(C.validateDB(db).shifts.length,1);db.shifts[0].date='2026-02-30';assert.throws(()=>C.validateDB(db));
 });
+test('DOCX export is a valid Word package with RTL document content',()=>{const files=unzipSync(wordDocument('گزارش ماهانه',['نام','ساعت'],[['همکار',4]]));assert.ok(files['word/document.xml']);assert.match(strFromU8(files['word/document.xml']),/گزارش ماهانه/);assert.match(strFromU8(files['word/document.xml']),/bidiVisual/);});
 test('XLSX is a valid ZIP with numeric cells, RTL and safe inline text',()=>{
   const bytes=spreadsheet([{name:'جزئیات',headers:['نام','مبلغ'],rows:[['=SUM(A1)',123],['متن & <نمونه>',0]]}]);
   const files=unzipSync(bytes),sheet=strFromU8(files['xl/worksheets/sheet1.xml']);

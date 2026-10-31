@@ -7,17 +7,17 @@ const luminance = hex => {
   return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
 };
 const contrast = (a,b) => (Math.max(luminance(a),luminance(b))+.05)/(Math.min(luminance(a),luminance(b))+.05);
-for (const selector of [':root', '[data-theme=dark]']) {
+for (const selector of [':root']) {
   test(`${selector} text and semantic colors have readable contrast`, () => {
     const body = css.slice(css.indexOf(selector)).split('}')[0];
-    const tokens = Object.fromEntries([...body.matchAll(/--([\w-]+):(#[a-f0-9]{6})(?=;)/g)].map(m=>[m[1],m[2]]));
+    const tokens = Object.fromEntries([...body.matchAll(/--([\w-]+):(#[a-f0-9]{6})(?=;)/gi)].map(m=>[m[1],m[2]]));
     for (const [fg,bg] of [['text','surface'],['muted','surface'],['muted','soft'],['on-accent','accent'],['self','self-bg'],['deputy','deputy-bg'],['future','future-bg'],['red','red-bg']]) {
       assert.ok(contrast(tokens[fg],tokens[bg]) >= 4.5, `${selector} ${fg}/${bg}`);
     }
   });
 }
 test('Cool tinted surfaces and alternate Persian font are shipped offline', async () => {
-  assert.ok(css.includes('--surface:#f4f7f8'));
+  assert.ok(css.includes('--surface:#16213E'));assert.ok(css.includes('--accent:#EFC07B'));assert.ok(css.includes('--line:#2F4F4F'));
   assert.ok(css.includes('NotoArabic,Tahoma,sans-serif'));
   assert.ok(css.includes('font-weight:100 900'));
   for (const file of ['noto-arabic.woff2','noto-latin.woff2','noto-LICENSE.txt']) await access(new URL('../assets/'+file, import.meta.url));
