@@ -1,7 +1,0 @@
-node_modules/
-outputs/
-.noqte/
-.DS_Store
-*.log
-.env
-.env.*
