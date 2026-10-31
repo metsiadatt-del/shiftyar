@@ -29,7 +29,8 @@ test('Directory forms create pharmacy and deputy, reject negative rates',async()
   await submit('[data-directory="pharmacies"]',{name:'داروخانه تست',rate:'-1'});assert.match(document.querySelector('[data-directory="pharmacies"] .error-text').textContent,/نرخ/);
   await submit('[data-directory="pharmacies"]',{name:'داروخانه تست',rate:'۳۰۰٬۰۰۰'});
   assert.equal(saved().pharmacies[0].rate,300000);
-  await submit('[data-directory="deputies"]',{name:'همکار آزمایشی',contact:'09120000000'});assert.equal(saved().deputies.length,1);assert.ok(document.querySelector('[data-directory="deputies"] [name="medical"]'));
+  const extras=document.querySelectorAll('[data-directory="deputies"] details.optional-fields');assert.equal(extras.length,2);for(const detail of extras)assert.equal(detail.hasAttribute('open'),false);
+  await submit('[data-directory="deputies"]',{name:'همکار آزمایشی',contact:'09120000000',medical:'12345',payment:'پرداخت آزمایشی'});assert.equal(saved().deputies[0].medical,'12345');assert.equal(saved().deputies[0].payment,'پرداخت آزمایشی');assert.equal(saved().deputies.length,1);assert.ok(document.querySelector('[data-directory="deputies"] [name="medical"]'));
 });
 test('Shift creation persists rate and catches overlap',async()=>{
   click('[data-action="navigate"][data-page="shift"]');
@@ -70,7 +71,10 @@ test('Shift form supports dropdown dates, inline additions and retained draft',a
   const form=document.querySelector('#shift-form'),els=fields(form);Object.defineProperty(form,'elements',{value:els,configurable:true});
   assert.equal(form.querySelectorAll('[data-shift-date]').length,3);
   assert.equal(form.querySelector('[name="date"]').type,'hidden');
-  assert.equal(form.querySelector('[data-action="add-hours"]'),null);
+  assert.deepEqual([...form.querySelectorAll('[data-action="add-hours"]')].map(b=>b.dataset.hours),['4','5','8','12']);
+  value(els.start,'20:30');
+  for(const [hours,end] of [[4,'00:30'],[5,'01:30'],[8,'04:30'],[12,'08:30']]){click(`#shift-form [data-hours="${hours}"]`);assert.equal(els.end.value,end);}
+  value(els.end,'00:00');
   value(els.year,'1405');value(els.month,'6');change(els.month);value(els.day,'31');change(els.day);
   value(els.month,'7');change(els.month);assert.equal(els.day.options.length,30);assert.equal(els.date.value,'1405/07/30');
   value(els.note,'پیش‌نویس حفظ شود');value(els.start,'09:15');
