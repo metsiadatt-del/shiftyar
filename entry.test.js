@@ -20,12 +20,13 @@ function setup(protocol = 'file:', theme, dark = false) {
     navigator: { serviceWorker: { register: async () => { registrations++; } } }
   });
   window.scrollTo = () => {};
+  for(const d of document.querySelectorAll('dialog')){d.showModal=()=>d.setAttribute('open','');d.close=()=>d.removeAttribute('open');}
   return { window, document, context, registrations: () => registrations };
 }
 test('HTML loads ordered classic scripts, not file-blocked modules', () => {
   const { document } = parseHTML(html);
   const scripts = [...document.querySelectorAll('script[src]')];
-  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=19', 'app.bundle.js?v=19']);
+  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=20', 'app.bundle.js?v=20']);
   assert.ok(scripts.every(s => s.hasAttribute('defer') && s.type !== 'module'));
   assert.ok(document.querySelector('#startup').textContent.trim());
 });
@@ -35,7 +36,7 @@ test('Delivered bundle renders all main tabs in a file-protocol DOM without modu
   vm.runInContext(bundle, env.context);
   assert.equal(env.document.querySelector('#startup'), null);
   assert.ok(env.document.querySelector('.calendar'));
-  for (const page of ['shift', 'directory', 'reports', 'planning', 'profile', 'calendar']) {
+  for (const page of ['directory', 'reports', 'planning', 'profile', 'calendar']) {
     env.document.querySelector(`[data-action="navigate"][data-page="${page}"]`).dispatchEvent(new env.window.Event('click', { bubbles: true }));
     assert.ok(env.document.querySelector('#main h1').textContent);
   }
@@ -45,7 +46,7 @@ test('New shift and template default to 20:00–00:00 with today in Tehran', () 
   const env = setup();
   vm.runInContext(bundle, env.context);
   const click = selector => env.document.querySelector(selector).dispatchEvent(new env.window.Event('click', { bubbles: true }));
-  click('[data-action="navigate"][data-page="shift"]');
+  click('[data-action="new-shift"]');
   assert.equal(env.document.querySelector('[name="date"]').value, dateNumeric(nowParts().date));
   assert.equal(env.document.querySelector('[name="start"]').value, '20:00');
   assert.equal(env.document.querySelector('[name="end"]').value, '00:00');
@@ -63,6 +64,11 @@ test('Bundle respects saved themes and falls back to system appearance',()=>{
  }
 });
 
+test('Early theme initialization runs before styles without waiting for the bundle',()=>{
+ const {document}=parseHTML(html),script=document.querySelector('script:not([src])').textContent;
+ assert.ok(html.indexOf(script)<html.indexOf('rel="stylesheet"'));
+ for(const [theme,dark,expected] of [['dark',false,'dark'],['light',true,'light'],[undefined,true,'dark']]){const env=setup('file:',theme,dark);vm.runInContext(script,env.context);assert.equal(env.document.documentElement.dataset.theme,expected);}
+});
 test('HTTPS launch still registers offline support', () => {
   const env = setup('https:');
   vm.runInContext(bundle, env.context);

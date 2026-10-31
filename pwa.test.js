@@ -15,18 +15,26 @@ test('Responsive styles include mobile safe areas, unified palette and print',as
 test('New shell precaches versioned entry assets and activates without closing old tabs',async()=>{
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
  assert.equal(w.getSkipped(),true);
- for(const path of ['./styles.css?v=19','./boot.js?v=19','./app.bundle.js?v=19','./assets/background-wave.svg?v=19'])assert.ok(w.getAssets().includes(path));
+ for(const path of ['./styles.css?v=20','./boot.js?v=20','./app.bundle.js?v=20','./assets/background-wave.svg?v=20'])assert.ok(w.getAssets().includes(path));
  w.handlers.activate({waitUntil:x=>p=x});await p;assert.equal(w.getClaimed(),true);
 });
 test('Document URLs bypass an old cache containing only unversioned files',async()=>{
  const html=await readFile(new URL('index.html',root),'utf8');
- for(const file of ['styles.css','boot.js','app.bundle.js'])assert.ok(html.includes(file+'?v=19'));
+ for(const file of ['styles.css','boot.js','app.bundle.js'])assert.ok(html.includes(file+'?v=20'));
  const css=await readFile(new URL('styles.css',root),'utf8');assert.ok(css.includes('vazirmatn-arabic.woff2'));
+});
+
+test('Updated install icons are versioned, precached and available as Windows ICO',async()=>{
+ const html=await readFile(new URL('index.html',root),'utf8'),manifest=JSON.parse(await readFile(new URL('manifest.webmanifest',root)));
+ assert.ok(html.includes('assets/icon-192.png?v=20'));
+ const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
+ for(const icon of manifest.icons){assert.ok(icon.src.endsWith('?v=20'));assert.ok(w.getAssets().includes('./'+icon.src));}
+ const ico=await readFile(new URL('assets/icon.ico',root));assert.equal(ico.readUInt16LE(2),1);assert.ok(ico.readUInt16LE(4)>=4);
 });
 
 test('Versioned CSS, bundle and wave are available offline with query strings intact',async()=>{
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
- for(const path of ['styles.css?v=19','app.bundle.js?v=19','assets/background-wave.svg?v=19']){
+ for(const path of ['styles.css?v=20','app.bundle.js?v=20','assets/background-wave.svg?v=20']){
   w.handlers.fetch({request:{url:'https://example.test/shiftyar/'+path,method:'GET',mode:'cors'},respondWith:x=>p=x});
   assert.equal((await p).path,'./'+path);
  }
