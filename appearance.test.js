@@ -17,8 +17,10 @@ for (const selector of [':root']) {
   });
 }
 test('Cool tinted surfaces and alternate Persian font are shipped offline', async () => {
-  assert.ok(css.includes('--surface:#16213E'));assert.ok(css.includes('--accent:#EFC07B'));assert.ok(css.includes('--line:#2F4F4F'));
-  assert.ok(css.includes('NotoArabic,Tahoma,sans-serif'));
+  for (const color of ['003e1f','ef233c','d5f2e3','73ba9b','d90429','cad2c5','84a98c','52796f','354f52']) assert.ok(css.includes('#'+color));
+  assert.ok(css.includes("url('./assets/mrt-khodkar.woff')"));
+  await access(new URL('../assets/mrt-khodkar.woff',import.meta.url));
+  assert.ok(css.includes('MRT_Khodkar_,NotoArabic,Tahoma,sans-serif'));
   assert.ok(css.includes('font-weight:100 900'));
   for (const file of ['noto-arabic.woff2','noto-latin.woff2','noto-LICENSE.txt']) await access(new URL('../assets/'+file, import.meta.url));
 });

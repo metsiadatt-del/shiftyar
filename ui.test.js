@@ -65,6 +65,25 @@ test('Weekly assignment repeats in the month and collision rolls back',async()=>
   click('[data-action="plan-tab"][data-value="calendar"]');const t=saved().templates[1].id;click(`[data-action="assign"][data-key$="|${t}"]`);
   await submit('#assignment-form',{person:saved().staff[0].id});assert.match(document.querySelector('#assignment-form .error-text').textContent,/تداخل/);assert.equal(Object.keys(saved().assignments).length,count);click('[data-action="close"]');
 });
+test('Shift form supports dropdown dates, inline additions and retained draft',async()=>{
+  click('[data-action="navigate"][data-page="shift"]');
+  const form=document.querySelector('#shift-form'),els=fields(form);Object.defineProperty(form,'elements',{value:els,configurable:true});
+  assert.equal(form.querySelectorAll('[data-shift-date]').length,3);
+  assert.equal(form.querySelector('[name="date"]').type,'hidden');
+  assert.equal(form.querySelector('[data-action="add-hours"]'),null);
+  value(els.year,'1405');value(els.month,'6');change(els.month);value(els.day,'31');change(els.day);
+  value(els.month,'7');change(els.month);assert.equal(els.day.options.length,30);assert.equal(els.date.value,'1405/07/30');
+  value(els.note,'پیش‌نویس حفظ شود');value(els.start,'09:15');
+  click('[data-action="quick-directory"][data-type="pharmacies"]');
+  await submit('[data-quick]',{name:'داروخانه جدید',rate:'-5'});assert.match(modal.textContent,/نرخ ساعتی/);
+  await submit('[data-quick]',{name:'داروخانه جدید',rate:'250000'});
+  assert.equal(document.querySelector('#shift-form'),form);assert.equal(els.note.value,'پیش‌نویس حفظ شود');assert.equal(els.start.value,'09:15');assert.equal(els.pharmacy.value,saved().pharmacies.at(-1).id);
+  value(els.owner,'deputy');change(els.owner);assert.equal(form.querySelector('[data-deputy-field]').hidden,false);
+  click('[data-action="quick-directory"][data-type="deputies"]');await submit('[data-quick]',{firstName:'آوا',lastName:'تست'});
+  assert.equal(els.deputy.value,saved().deputies.at(-1).id);assert.equal(els.note.value,'پیش‌نویس حفظ شود');
+  await submit('#shift-form',{});assert.equal(saved().shifts.at(-1).person,saved().deputies.at(-1).id);
+  click('[data-action="navigate"][data-page="reports"]');assert.equal(document.querySelectorAll('.total-box').length,0);assert.equal(document.querySelector('.topbar-center').textContent,'MET');assert.match(document.querySelector('.breadcrumb').textContent,/فضای کاری/);
+});
 test('Unified navy palette stays active without a theme switcher',()=>{assert.equal(document.documentElement.dataset.theme,'unified');assert.equal(document.querySelector('[data-action="theme"]'),null);});
 test('All export choices exist including XLSX, Word and PDF print',()=>{click('[data-action="navigate"][data-page="calendar"]');for(const format of ['xlsx','csv','html','json','docx','pdf'])assert.ok(document.querySelector(`[data-format="${format}"]`));});
 test('Profile name updates across navigation and shift owner labels',async()=>{click('[data-action="navigate"][data-page="profile"]');await submit('#profile-form',{name:'سارا'});assert.equal(saved().profile.name,'سارا');click('[data-action="navigate"][data-page="shift"]');assert.match(document.querySelector('select[name="owner"]').textContent,/سارا/);});
