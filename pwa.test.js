@@ -15,18 +15,18 @@ test('Responsive styles include mobile safe areas, unified palette and print',as
 test('New shell precaches versioned entry assets and activates without closing old tabs',async()=>{
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
  assert.equal(w.getSkipped(),true);
- for(const path of ['./styles.css?v=17','./boot.js?v=17','./app.bundle.js?v=17','./assets/background-wave.svg?v=17'])assert.ok(w.getAssets().includes(path));
+ for(const path of ['./styles.css?v=18','./boot.js?v=18','./app.bundle.js?v=18','./assets/background-wave.svg?v=18'])assert.ok(w.getAssets().includes(path));
  w.handlers.activate({waitUntil:x=>p=x});await p;assert.equal(w.getClaimed(),true);
 });
 test('Document URLs bypass an old cache containing only unversioned files',async()=>{
  const html=await readFile(new URL('index.html',root),'utf8');
- for(const file of ['styles.css','boot.js','app.bundle.js'])assert.ok(html.includes(file+'?v=17'));
- const css=await readFile(new URL('styles.css',root),'utf8');assert.ok(css.includes('background-wave.svg?v=17'));
+ for(const file of ['styles.css','boot.js','app.bundle.js'])assert.ok(html.includes(file+'?v=18'));
+ const css=await readFile(new URL('styles.css',root),'utf8');assert.ok(css.includes('background-wave.svg?v=18'));
 });
 
 test('Versioned CSS, bundle and wave are available offline with query strings intact',async()=>{
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
- for(const path of ['styles.css?v=17','app.bundle.js?v=17','assets/background-wave.svg?v=17']){
+ for(const path of ['styles.css?v=18','app.bundle.js?v=18','assets/background-wave.svg?v=18']){
   w.handlers.fetch({request:{url:'https://example.test/shiftyar/'+path,method:'GET',mode:'cors'},respondWith:x=>p=x});
   assert.equal((await p).path,'./'+path);
  }

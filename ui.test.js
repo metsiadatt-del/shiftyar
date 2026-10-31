@@ -108,45 +108,45 @@ test('Unified navy palette stays active without a theme switcher',()=>{assert.eq
 test('All export choices exist including XLSX, Word and PDF print',()=>{click('[data-action="navigate"][data-page="calendar"]');for(const format of ['xlsx','csv','html','json','docx','pdf'])assert.ok(document.querySelector(`[data-format="${format}"]`));});
 test('Profile name updates across navigation and shift owner labels',async()=>{click('[data-action="navigate"][data-page="profile"]');await submit('#profile-form',{name:'سارا'});assert.equal(saved().profile.name,'سارا');click('[data-action="navigate"][data-page="shift"]');assert.match(document.querySelector('select[name="owner"]').textContent,/سارا/);});
 
-test('Planning fullscreen fits every slot and exits without changing data',()=>{
+test('Only daily planning remains and fullscreen preserves it',()=>{
   click('[data-action="navigate"][data-page="planning"]');click('[data-action="plan-tab"][data-value="calendar"]');
   const before=storage.get('shiftyar-v1'),count=document.querySelectorAll('[data-action="assign"]').length;
-  click('[data-action="plan-fullscreen"]');
-  assert.ok(document.body.classList.contains('planning-expanded'));
-  assert.ok(document.querySelector('.planning-board.is-fullscreen.is-fit'));
-  assert.equal(document.querySelectorAll('.plan-matrix [data-action="assign"]').length,count);
-  assert.equal(document.querySelectorAll('.plan-matrix tbody tr').length,count/saved().templates.length);
-  click('[data-action="plan-fit"]');assert.ok(!document.querySelector('.planning-board.is-fit'));
-  click('[data-action="plan-bulk"]');
+  for(const action of ['plan-bulk','plan-fit','plan-overview'])assert.equal(document.querySelector(`[data-action="${action}"]`),null);
+  click('[data-action="plan-fullscreen"]');assert.ok(document.body.classList.contains('planning-expanded'));
+  assert.equal(document.querySelector('.plan-matrix'),null);
+  assert.equal(document.querySelectorAll('.plan-day [data-action="assign"]').length,count);
+  click('[data-action="assign"]');
   const escape=new window.Event('keydown');Object.defineProperty(escape,'key',{value:'Escape'});document.dispatchEvent(escape);
   assert.ok(document.body.classList.contains('planning-expanded'));
   click('[data-action="close"]');document.dispatchEvent(escape);
-  assert.ok(!document.body.classList.contains('planning-expanded'));
-  assert.equal(storage.get('shiftyar-v1'),before);
+  assert.ok(!document.body.classList.contains('planning-expanded'));assert.equal(storage.get('shiftyar-v1'),before);
 });
-test('Bulk assignment preserves filled slots, rejects collisions atomically and handles overnight shifts',async()=>{
-  const person=saved().staff[0].id,template=saved().templates[0].id;
-  const dates=[...document.querySelectorAll('.plan-matrix tbody tr')].map(row=>row.querySelector('[data-key]').dataset.key.split('|')[0]);
-  const existing=structuredClone(saved().assignments);
-  click('[data-action="plan-bulk"]');document.querySelector('[name="onlyEmpty"]').checked=true;
-  await submit('#bulk-assignment-form',{from:dates[0],to:dates.at(-1),template,person});
-  assert.equal(modal.hasAttribute('open'),false);
-  assert.equal(Object.keys(saved().assignments).length,dates.length);
-  for(const [key,assignment] of Object.entries(existing))assert.deepEqual(saved().assignments[key],assignment);
+test('Fixed shifts repeat selected weekdays across the whole chosen month atomically',async()=>{
+  click('[data-action="navigate"][data-page="shift"]');
+  const form=document.querySelector('#shift-form'),els=fields(form),pharmacy=saved().pharmacies[0].id;
+  els.fixed.checked=true;change(els.fixed);value(els.fixedDays,'selected');change(els.fixedDays);
+  assert.equal(form.querySelector('[data-fixed-fields]').hidden,false);
+  assert.equal(form.querySelector('[data-fixed-weekdays]').hidden,false);
   const before=storage.get('shiftyar-v1');
-  click('[data-action="plan-bulk"]');document.querySelector('[name="onlyEmpty"]').checked=true;
-  await submit('#bulk-assignment-form',{from:dates[0],to:dates.at(-1),template:saved().templates[1].id,person});
-  assert.match(document.querySelector('.error-text').textContent,/تداخل/);assert.equal(storage.get('shiftyar-v1'),before);
-  await submit('#bulk-assignment-form',{from:dates.at(-1),to:dates[0],template,person});
-  assert.match(document.querySelector('.error-text').textContent,/بازه/);assert.equal(storage.get('shiftyar-v1'),before);
-  document.querySelector('[name="onlyEmpty"]').checked=false;
-  globalThis.confirm=()=>false;
-  await submit('#bulk-assignment-form',{from:dates[0],to:dates[0],template,person});
-  assert.equal(storage.get('shiftyar-v1'),before);globalThis.confirm=()=>true;
-  const form=document.querySelector('#bulk-assignment-form'),els=fields(form);els.custom.checked=true;change(els.custom);
-  await submit('#bulk-assignment-form',{from:dates.at(-1),to:dates.at(-1),template:saved().templates[1].id,person,start:'20:00',end:'00:00'});
-  assert.equal(modal.hasAttribute('open'),false);
-  assert.deepEqual(saved().assignments[`${dates.at(-1)}|${saved().templates[1].id}`],{person,custom:true,start:'20:00',end:'00:00'});
+  await submit('#shift-form',{date:'1405/12/15',pharmacy,owner:'self',start:'20:00',end:'00:00'});
+  assert.match(form.querySelector('.error-text').textContent,/حداقل/);assert.equal(storage.get('shiftyar-v1'),before);
+  els.weekday0.checked=true;els.weekday3.checked=true;
+  await submit('#shift-form',{});
+  const expected=C.monthDays(1405,12).filter(d=>[0,3].includes(C.weekday(d))),added=saved().shifts.filter(s=>C.toJ(s.date).jm===12&&C.toJ(s.date).jy===1405);
+  assert.deepEqual(added.map(s=>s.date),expected);assert.equal(new Set(added.map(s=>s.id)).size,expected.length);
+  assert.ok(added.every(s=>s.start==='20:00'&&s.end==='00:00'&&s.rate===300000));
+  const current=fields(document.querySelector('#shift-form'));current.fixed.checked=true;value(current.fixedDays,'all');
+  const snapshot=storage.get('shiftyar-v1');
+  await submit('#shift-form',{date:'1405/12/01',pharmacy,owner:'self',start:'20:00',end:'00:00'});
+  assert.match(document.querySelector('#shift-form .error-text').textContent,/هم‌زمان/);assert.equal(storage.get('shiftyar-v1'),snapshot);
+});
+test('Fixed whole-week shifts support leap months, 24 hours and independent deputies',async()=>{
+  click('[data-action="navigate"][data-page="shift"]');
+  const els=fields(document.querySelector('#shift-form'));els.fixed.checked=true;value(els.fixedDays,'all');
+  const before=saved().shifts.length;
+  await submit('#shift-form',{date:'1403/12/20',pharmacy:saved().pharmacies[0].id,owner:'deputy',deputy:saved().deputies[0].id,start:'08:00',end:'08:00'});
+  const added=saved().shifts.slice(before);assert.equal(added.length,30);
+  assert.deepEqual(added.map(s=>s.date),C.monthDays(1403,12));assert.ok(added.every(s=>s.person===saved().deputies[0].id));
 });
 
 test('Detailed report shows actual end date and historical wages safely',()=>{
