@@ -29,6 +29,11 @@ test('Responsive rules are structurally present for each requested width',()=>{
   if(width<375)assert.ok(css.includes('@media(max-width:374px)'));
  }
 });
+test('Planning uses a separate local font without changing the application font',async()=>{
+ for(const file of ['estedad-arabic.woff2','estedad-latin.woff2','estedad-LICENSE.txt'])await access(new URL('../assets/'+file,import.meta.url));
+ assert.ok(css.includes('.planning-page #main,.planning-page dialog,.planning-page #print-area{font-family:PlanningEstedad,Tahoma,sans-serif}'));
+ assert.ok(css.includes('font:15px/1.7 Vazirmatn,Tahoma,sans-serif'));
+});
 test('Printing keeps full shift details independently of mobile display',()=>{
  const print=css.slice(css.indexOf('@media print'));
  assert.ok(print.includes('#print-area .calendar .shift-chip{display:block}'));

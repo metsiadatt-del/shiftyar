@@ -81,6 +81,33 @@ test('Planning saves, edits and removals retain the scroll container in normal a
   }
   click('[data-action="plan-fullscreen"]');
 });
+test('Planning dialog restores browser focus scroll jumps on open, save, cancel and Escape',async()=>{
+  const show=modal.showModal,close=modal.close,scrollTo=window.scrollTo,raf=window.requestAnimationFrame,frames=[];
+  const jump=()=>{const board=document.querySelector('.plan-board-scroll');board.scrollTop=0;board.scrollLeft=0;window.scrollY=0;};
+  window.scrollTo=({top,left})=>{window.scrollY=top;window.scrollX=left;};window.requestAnimationFrame=fn=>frames.push(fn);
+  modal.showModal=()=>{show();jump();};modal.close=()=>{close();jump();};
+  const finishClose=()=>{jump();modal.dispatchEvent(new window.Event('close'));jump();while(frames.length)frames.shift()();};
+  try{
+    for(const fullscreen of [false,true]){
+      if(fullscreen)click('[data-action="plan-fullscreen"]');
+      const board=document.querySelector('.plan-board-scroll'),slot=[...board.querySelectorAll('.plan-slot')].at(-2),selector=`[data-action="assign"][data-key="${slot.dataset.key}"]`;
+      let focusOptions;slot.focus=opts=>{focusOptions=opts;if(!opts?.preventScroll)jump();};
+      for(const action of ['save','cancel','escape','remove']){
+        board.scrollTop=1140;board.scrollLeft=-28;window.scrollY=fullscreen?0:360;
+        click(selector);assert.equal(board.scrollTop,1140);assert.equal(window.scrollY,fullscreen?0:360);
+        if(action==='save')await submit('#assignment-form',{person:saved().staff[0].id});
+        else if(action==='cancel')click('#modal [data-action="close"]');
+        else if(action==='remove')click('[data-action="unassign"]');
+        else modal.close();
+        finishClose();assert.equal(board.scrollTop,1140);assert.equal(board.scrollLeft,-28);assert.equal(window.scrollY,fullscreen?0:360);assert.deepEqual(focusOptions,{preventScroll:true});
+      }
+    }
+    click('[data-action="plan-fullscreen"]');
+  }finally{modal.showModal=show;modal.close=close;window.scrollTo=scrollTo;window.requestAnimationFrame=raf;window.scrollY=0;window.scrollX=0;}
+});
+test('Planning font scope is removed when navigating away',()=>{
+  assert.ok(document.body.classList.contains('planning-page'));click('[data-action="navigate"][data-page="calendar"]');assert.ok(!document.body.classList.contains('planning-page'));click('[data-action="navigate"][data-page="planning"]');assert.ok(document.body.classList.contains('planning-page'));
+});
 test('Shift form supports dropdown dates, inline additions and retained draft',async()=>{
   click('[data-action="new-shift"]');
   const form=document.querySelector('#shift-form'),els=fields(form);Object.defineProperty(form,'elements',{value:els,configurable:true});
