@@ -60,6 +60,16 @@ test('Planning templates, custom time and independent totals',()=>{
   const last=C.toISO(1405,7,30),first=C.toISO(1405,8,1);db.assignments[`${last}|t`]={person:'p',custom:false,start:'22:00',end:'06:00'};db.assignments[`${first}|t`]={person:'p',custom:true,start:'20:00',end:'23:00'};
   assert.equal(C.templateSlots(db,1405,8).length,30);assert.equal(C.templateSlots(db,1405,8)[0].start,'20:00');assert.equal(C.planningReport(db,1405,8)[0].total,3);assert.equal(C.planningReport(db,1405,7)[0].total,8);assert.equal(db.shifts.length,0);
 });
+test('Planning totals match an independent minute-by-minute calculation at month and holiday boundaries',()=>{
+ const db=C.emptyDB(),dates=[C.toISO(1403,12,1),C.toISO(1403,12,15),C.toISO(1403,12,30)];
+ db.staff=[{id:'a',name:'الف'},{id:'b',name:'ب'},{id:'zero',name:'بدون شیفت'}];db.templates=[{id:'t',name:'شب',start:'21:45',end:'06:15'}];
+ const times=[['21:45','06:15'],['08:00','08:00'],['23:59','00:01']];
+ dates.forEach((date,i)=>{db.holidays[date]=i===1;db.holidays[C.addDays(date,1)]=i===2;db.assignments[date+'|t']={person:i===1?'b':'a',custom:true,start:times[i][0],end:times[i][1]};});
+ const expected={a:{normal:0,night:0,holiday:0,total:0},b:{normal:0,night:0,holiday:0,total:0},zero:{normal:0,night:0,holiday:0,total:0}};
+ for(const [key,s] of Object.entries(db.assignments)){const date=key.split('|')[0],[h,m]=s.start.split(':').map(Number),[eh,em]=s.end.split(':').map(Number),start=h*60+m,minutes=(eh*60+em-start+1440)%1440||1440;for(let n=0;n<minutes;n++){const minute=(start+n)%1440,day=C.addDays(date,Math.floor((start+n)/1440)),kind=db.holidays[day]?'holiday':minute<360||minute>=1320?'night':'normal';expected[s.person][kind]++;expected[s.person].total++;}}
+ for(const row of C.planningReport(db,1403,12))for(const k of ['normal','night','holiday','total'])assert.ok(Math.abs(row[k]-expected[row.id][k]/60)<1e-10,`${row.id}/${k}`);
+ assert.ok(C.planningReport(db,1404,1).every(p=>p.total===0));
+});
 test('CSV escapes quotes, newlines and spreadsheet formulas',()=>{const s=C.csv(['نام','مبلغ'],[['=1+1',15],['a"b\nc',-2],[' @SUM(A1)',0]]);assert.ok(s.startsWith('\ufeff'));assert.ok(s.includes("\"'=1+1\""));assert.ok(s.includes('a""b\nc'));assert.ok(s.includes('"-2"'));});
 test('HTML escape protects notes and names',()=>{assert.equal(C.escape('<img src=x onerror="x">'),'&lt;img src=x onerror=&quot;x&quot;&gt;');});
 test('Backup validates shape and blocks unsafe photos/references/dates',()=>{

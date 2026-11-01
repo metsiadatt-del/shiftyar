@@ -17,7 +17,7 @@ function setup(protocol = 'file:', theme, dark = false) {
     location: { hash: '', protocol, reload() {} }, crypto: webcrypto, structuredClone,
     matchMedia: () => ({ matches: dark }), setTimeout, clearTimeout,
     localStorage: { getItem: k => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
-    navigator: { serviceWorker: { register: async () => { registrations++; } } }
+    navigator: { onLine:true, serviceWorker: { ready:Promise.resolve({}), register: async () => { registrations++; } } }
   });
   window.scrollTo = () => {};
   for(const d of document.querySelectorAll('dialog')){d.showModal=()=>d.setAttribute('open','');d.close=()=>d.removeAttribute('open');}
@@ -26,7 +26,7 @@ function setup(protocol = 'file:', theme, dark = false) {
 test('HTML loads ordered classic scripts, not file-blocked modules', () => {
   const { document } = parseHTML(html);
   const scripts = [...document.querySelectorAll('script[src]')];
-  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=22', 'app.bundle.js?v=22']);
+  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=23', 'app.bundle.js?v=23']);
   assert.ok(scripts.every(s => s.hasAttribute('defer') && s.type !== 'module'));
   assert.ok(document.querySelector('#startup').textContent.trim());
 });
@@ -73,6 +73,12 @@ test('HTTPS launch still registers offline support', () => {
   const env = setup('https:');
   vm.runInContext(bundle, env.context);
   assert.equal(env.registrations(), 1);
+});
+test('Offline status waits for cache readiness and responds to connectivity without rerendering',async()=>{
+ const env=setup('https:');let ready;env.context.navigator.serviceWorker.ready=new Promise(resolve=>{ready=resolve;});vm.runInContext(bundle,env.context);const main=env.document.querySelector('#main');assert.match(env.document.querySelector('[data-offline-status]').textContent,/آماده‌سازی/);ready({});await new Promise(resolve=>setTimeout(resolve,0));assert.match(env.document.querySelector('[data-offline-status]').textContent,/آمادهٔ استفاده آفلاین/);env.context.navigator.onLine=false;env.window.dispatchEvent(new env.window.Event('offline'));assert.match(env.document.querySelector('[data-offline-status]').textContent,/اطلاعات روی دستگاه/);assert.equal(env.document.querySelector('#main'),main);
+});
+test('Brand and approved icon are present in the actual delivered bundle',()=>{
+ const env=setup();vm.runInContext(bundle,env.context);assert.match(env.document.title,/ShiftYar/);assert.equal(env.document.querySelector('.brand strong').textContent,'ShiftYar');assert.equal(env.document.querySelector('.app-icon').getAttribute('src'),'assets/shiftyar-192.png?v=23');assert.equal(env.document.querySelector('.topbar-center').textContent,'MET');
 });
 test('A missing or failing bundle leaves an actionable message instead of a blank page', () => {
   const env = setup();

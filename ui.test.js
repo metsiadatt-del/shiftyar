@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {parseHTML} from 'linkedom';
 import {webcrypto} from 'node:crypto';
 import * as C from '../core.js';
+import {unzipSync,strFromU8} from '../vendor/fflate.js';
 
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const {window,document}=parseHTML(html);
@@ -125,10 +126,10 @@ test('Shift form supports dropdown dates, inline additions and retained draft',a
   await submit('[data-quick]',{name:'داروخانه جدید',rate:'250000'});
   assert.equal(document.querySelector('#shift-form'),form);assert.equal(els.note.value,'پیش‌نویس حفظ شود');assert.equal(els.start.value,'09:15');assert.equal(els.pharmacy.value,saved().pharmacies.at(-1).id);
   value(els.owner,'deputy');change(els.owner);assert.equal(form.querySelector('[data-deputy-field]').hidden,false);
-  click('[data-action="quick-directory"][data-type="deputies"]');await submit('[data-quick]',{firstName:'آوا',lastName:'تست'});
+  click('[data-action="quick-directory"][data-type="deputies"]');await submit('[data-quick]',{name:'آوا تست'});
   assert.equal(els.deputy.value,saved().deputies.at(-1).id);assert.equal(els.note.value,'پیش‌نویس حفظ شود');
   await submit('#shift-form',{});assert.equal(saved().shifts.at(-1).person,saved().deputies.at(-1).id);
-  click('[data-action="navigate"][data-page="reports"]');assert.equal(document.querySelectorAll('.total-box').length,0);assert.equal(document.querySelector('.topbar-center').textContent,'MET');assert.match(document.querySelector('.breadcrumb').textContent,/فضای کاری/);assert.equal(document.querySelector('.topbar-art'),null);assert.ok(document.querySelector('.footer').textContent.includes('FINAL MET SHIFTYAR'));
+  click('[data-action="navigate"][data-page="reports"]');assert.equal(document.querySelectorAll('.total-box').length,0);assert.equal(document.querySelector('.topbar-center').textContent,'MET');assert.match(document.querySelector('.breadcrumb').textContent,/فضای کاری/);assert.equal(document.querySelector('.topbar-art'),null);assert.ok(document.querySelector('.footer').textContent.includes('ShiftYar'));
 });
 test('Month letter marks holidays by colour and lets the user define them',async()=>{
   click('[data-action="navigate"][data-page="calendar"]');
@@ -205,7 +206,7 @@ test('Partial weeks never create shifts outside the chosen month',async()=>{
 
 test('Progressive disclosure keeps directory drafts and exposes contact details',()=>{
  click('[data-action="navigate"][data-page="directory"]');
- const panel=document.querySelector('.directory-add'),input=panel.querySelector('[name="firstName"]');
+ const panel=document.querySelector('.directory-add'),input=panel.querySelector('[name="name"]');
  input.value='پیش‌نویس';panel.setAttribute('open','');panel.removeAttribute('open');panel.setAttribute('open','');assert.equal(input.value,'پیش‌نویس');
  assert.ok(document.querySelector('.list-row details bdi'));assert.equal(panel.hasAttribute('open'),true);
 });
@@ -244,4 +245,31 @@ test('Detailed report shows actual end date and historical wages safely',()=>{
   assert.ok(document.querySelector('#main').textContent.includes('جزئیات شیفت ها'));
   assert.equal(table.querySelector('img'),null);
   const shift=saved().shifts[0];assert.ok(table.textContent.includes(C.fa(shift.rate)));assert.ok(table.textContent.includes(C.fa(C.duration(shift.start,shift.end)*shift.rate)));
+});
+test('Quick staff creation preserves assignment draft, validates and selects the new person',async()=>{
+ click('[data-action="navigate"][data-page="planning"]');click('[data-action="plan-tab"][data-value="calendar"]');
+ const board=document.querySelector('.plan-board-scroll');board.scrollTop=640;click('[data-action="assign"]');const form=document.querySelector('#assignment-form'),els=fields(form);Object.defineProperty(form,'elements',{value:els,configurable:true});els.custom.checked=true;change(els.custom);value(els.start,'17:15');value(els.end,'21:45');els.repeat.checked=true;change(els.repeat);
+ click('[data-action="quick-staff"]');await submit('#quick-staff-form',{name:'پرسنل جدید',national:'123'});assert.match(submodal.textContent,/۱۰ رقم/);assert.equal(document.querySelector('#assignment-form'),form);
+ await submit('#quick-staff-form',{name:'پرسنل جدید',national:'0012345678'});assert.equal(submodal.hasAttribute('open'),false);assert.equal(modal.hasAttribute('open'),true);assert.equal(els.person.value,saved().staff.at(-1).id);assert.equal(els.start.value,'17:15');assert.equal(els.end.value,'21:45');assert.equal(els.repeat.checked,true);assert.equal(board.scrollTop,640);
+ click('[data-action="quick-staff"]');click('#submodal [data-action="close"]');assert.equal(document.querySelector('#assignment-form'),form);await submit('#assignment-form',{});assert.ok(Object.values(saved().assignments).some(a=>a.person===saved().staff.at(-1).id&&a.start==='17:15'));
+});
+test('Deputy forms expose one full name and edits persist that name',async()=>{
+ click('[data-action="navigate"][data-page="directory"]');const form=document.querySelector('[data-directory="deputies"]');assert.equal(form.querySelector('[name="firstName"]'),null);assert.equal(form.querySelector('[name="lastName"]'),null);assert.notEqual(form.querySelector('[name="name"]').type,'hidden');
+ click('[data-action="edit-directory"][data-type="deputies"]');await submit('#modal [data-directory="deputies"]',{name:'نام کامل تازه'});assert.equal(saved().deputies[0].name,'نام کامل تازه');assert.match(document.querySelector('#main').textContent,/نام کامل تازه/);
+});
+test('Every planning export starts with name and four hour columns',async()=>{
+ const headers=['نام','ساعت عادی','ساعت شب','ساعت تعطیل','ساعات کل'],blobs=[],create=URL.createObjectURL;URL.createObjectURL=blob=>{blobs.push(blob);return create(blob);};
+ document.fonts={ready:Promise.resolve()};window.print=()=>{};
+ try{for(const scope of ['plan-report','plan-calendar']){
+  click('[data-action="navigate"][data-page="planning"]');click(`[data-action="plan-tab"][data-value="${scope==='plan-report'?'report':'calendar'}"]`);
+  for(const format of ['json','csv','html','xlsx','docx','pdf']){
+   click(`[data-scope="${scope}"][data-format="${format}"]`);
+   if(format==='pdf'){await Promise.resolve();assert.deepEqual([...document.querySelectorAll('#print-area th')].slice(0,5).map(el=>el.textContent),headers);continue;}
+   const blob=blobs.at(-1);
+   if(format==='json'){const result=JSON.parse(await blob.text());assert.deepEqual(result.headers.slice(0,5),headers);for(const row of result.rows){assert.equal(typeof row[1],'number');assert.ok(Math.abs(row[1]+row[2]+row[3]-row[4])<1e-8);}continue;}
+   if(format==='csv'){assert.ok((await blob.text()).split('\r\n')[0].startsWith(headers.map(h=>'"'+h+'"').join(',')));continue;}
+   if(format==='html'){const {document:exported}=parseHTML(await blob.text());assert.deepEqual([...exported.querySelectorAll('th')].slice(0,5).map(el=>el.textContent),headers);continue;}
+   const files=unzipSync(new Uint8Array(await blob.arrayBuffer())),xml=strFromU8(files[format==='xlsx'?'xl/worksheets/sheet1.xml':'word/document.xml']);let previous=-1;for(const h of headers){const next=xml.indexOf('>'+h+'<',previous+1);assert.ok(next>previous,h);previous=next;}
+  }
+ }}finally{URL.createObjectURL=create;}
 });

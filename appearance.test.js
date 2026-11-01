@@ -16,7 +16,8 @@ for(const selector of [':root{',':root[data-theme=dark]{']){
 test('Offline font and accessible touch and focus rules are shipped',async()=>{
  for(const file of ['vazirmatn-arabic.woff2','vazirmatn-latin.woff2','vazirmatn-LICENSE.txt','icon.svg','icon-192.png','icon-512.png'])await access(new URL('../assets/'+file,import.meta.url));
  for(const rule of ['font-display:swap','font:15px/1.7 Vazirmatn,Tahoma,sans-serif','font-size:16px','min-height:44px',':focus-visible','prefers-reduced-motion','font-variant-numeric:tabular-nums','safe-area-inset-bottom'])assert.ok(css.includes(rule),rule);
- assert.ok(!/gradient|backdrop-filter|background-wave|met-shine/.test(css));
+ assert.ok(!/backdrop-filter|background-wave/.test(css));
+ assert.ok(css.includes('@keyframes met-shine'));assert.ok(css.includes('animation:met-shine 5s'));assert.ok(!css.includes('.topbar-center{display:none}'));
 });
 test('Compact calendar, keyboard-safe three-tab navigation and daily scrolling exist',()=>{
  for(const rule of ['max-width:767px','repeat(3,minmax(0,1fr))','.calendar:not(.zoom) .shift-chip{display:none}','.calendar-summary{display:block','body:has(input:focus) .sidebar','max-height:65dvh','touch-action:pan-x pan-y','height:100dvh','.is-fullscreen .plan-board-scroll{flex:1;min-height:0;max-height:none}'])assert.ok(css.includes(rule),rule);
@@ -30,8 +31,8 @@ test('Responsive rules are structurally present for each requested width',()=>{
  }
 });
 test('Planning uses a separate local font without changing the application font',async()=>{
- for(const file of ['estedad-arabic.woff2','estedad-latin.woff2','estedad-LICENSE.txt'])await access(new URL('../assets/'+file,import.meta.url));
- assert.ok(css.includes('.planning-page #main,.planning-page dialog,.planning-page #print-area{font-family:PlanningEstedad,Tahoma,sans-serif}'));
+ for(const file of ['noto-arabic.woff2','noto-latin.woff2','noto-LICENSE.txt'])await access(new URL('../assets/'+file,import.meta.url));
+ assert.ok(css.includes('.planning-page #main,.planning-page dialog,.planning-page #print-area{font-family:PlanningNoto,Tahoma,sans-serif}'));
  assert.ok(css.includes('font:15px/1.7 Vazirmatn,Tahoma,sans-serif'));
 });
 test('Printing keeps full shift details independently of mobile display',()=>{

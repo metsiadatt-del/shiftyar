@@ -15,29 +15,31 @@ test('Responsive styles include mobile safe areas, unified palette and print',as
 test('New shell precaches versioned entry assets and activates without closing old tabs',async()=>{
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
  assert.equal(w.getSkipped(),true);
- for(const path of ['./styles.css?v=22','./boot.js?v=22','./app.bundle.js?v=22','./assets/background-wave.svg?v=22'])assert.ok(w.getAssets().includes(path));
+ for(const path of ['./styles.css?v=23','./boot.js?v=23','./app.bundle.js?v=23','./assets/shiftyar-maskable.png?v=23'])assert.ok(w.getAssets().includes(path));
  w.handlers.activate({waitUntil:x=>p=x});await p;assert.equal(w.getClaimed(),true);
 });
 test('Document URLs bypass an old cache containing only unversioned files',async()=>{
  const html=await readFile(new URL('index.html',root),'utf8');
- for(const file of ['styles.css','boot.js','app.bundle.js'])assert.ok(html.includes(file+'?v=22'));
+ for(const file of ['styles.css','boot.js','app.bundle.js'])assert.ok(html.includes(file+'?v=23'));
  const css=await readFile(new URL('styles.css',root),'utf8');assert.ok(css.includes('vazirmatn-arabic.woff2'));
 });
 
 test('Updated install icons are versioned, precached and available as Windows ICO',async()=>{
  const html=await readFile(new URL('index.html',root),'utf8'),manifest=JSON.parse(await readFile(new URL('manifest.webmanifest',root)));
- assert.ok(html.includes('assets/icon-192.png?v=22'));
+ assert.ok(html.includes('assets/shiftyar-192.png?v=23'));
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
- for(const icon of manifest.icons){assert.ok(icon.src.endsWith('?v=22'));assert.ok(w.getAssets().includes('./'+icon.src));}
- assert.ok(html.includes('href="assets/icon.ico?v=22" type="image/x-icon"'));
- assert.ok(w.getAssets().includes('./assets/icon.ico?v=22'));
- for(const font of ['estedad-arabic.woff2','estedad-latin.woff2'])assert.ok(w.getAssets().includes('./assets/'+font));
- const ico=await readFile(new URL('assets/icon.ico',root));assert.equal(ico.readUInt16LE(2),1);assert.ok(ico.readUInt16LE(4)>=4);
+ for(const icon of manifest.icons){assert.ok(icon.src.endsWith('?v=23'));assert.ok(w.getAssets().includes('./'+icon.src));}
+ assert.ok(html.includes('href="favicon.ico?v=23" type="image/x-icon"'));
+ assert.ok(w.getAssets().includes('./favicon.ico?v=23'));
+ for(const font of ['noto-arabic.woff2','noto-latin.woff2'])assert.ok(w.getAssets().includes('./assets/'+font));
+ assert.equal(manifest.name,'ShiftYar');assert.equal(manifest.short_name,'ShiftYar');assert.equal(manifest.icons.filter(i=>i.purpose==='maskable').length,1);
+ const apple=await readFile(new URL('assets/shiftyar-180.png',root));assert.equal(apple.readUInt32BE(16),180);assert.ok(html.includes('assets/shiftyar-180.png?v=23'));assert.ok(w.getAssets().includes('./assets/shiftyar-180.png?v=23'));
+ const ico=await readFile(new URL('favicon.ico',root));assert.equal(ico.readUInt16LE(2),1);assert.ok(ico.readUInt16LE(4)>=4);
 });
 
 test('Versioned CSS, bundle and wave are available offline with query strings intact',async()=>{
  const w=worker();let p;w.handlers.install({waitUntil:x=>p=x});await p;
- for(const path of ['styles.css?v=22','app.bundle.js?v=22','assets/background-wave.svg?v=22']){
+ for(const path of ['styles.css?v=23','app.bundle.js?v=23','assets/shiftyar-maskable.png?v=23']){
   w.handlers.fetch({request:{url:'https://example.test/shiftyar/'+path,method:'GET',mode:'cors'},respondWith:x=>p=x});
   assert.equal((await p).path,'./'+path);
  }
