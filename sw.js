@@ -1,5 +1,5 @@
-const CACHE = 'shiftyar-shell-v23';
-const ASSETS = ['./','./index.html','./styles.css?v=23','./boot.js?v=23','./app.bundle.js?v=23','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/noto-arabic.woff2','./assets/noto-latin.woff2','./assets/vazirmatn-arabic.woff2','./assets/vazirmatn-latin.woff2','./assets/shiftyar-180.png?v=23','./assets/shiftyar-192.png?v=23','./assets/shiftyar-512.png?v=23','./assets/shiftyar-maskable.png?v=23','./favicon.ico?v=23','./favicon.ico','./manifest.webmanifest?v=23'];
+const CACHE = 'shiftyar-shell-v24';
+const ASSETS = ['./','./index.html','./styles.css?v=23','./boot.js?v=23','./app.bundle.js?v=24','./assets/app-icon.js','./app.js','./core.js','./spreadsheet.js','./vendor/fflate.js','./vendor/jalaali.js','./vendor/holidays.js','./assets/noto-arabic.woff2','./assets/noto-latin.woff2','./assets/vazirmatn-arabic.woff2','./assets/vazirmatn-latin.woff2','./assets/shiftyar-180.png?v=23','./assets/shiftyar-192.png?v=23','./assets/shiftyar-512.png?v=23','./assets/shiftyar-maskable.png?v=23','./favicon.ico?v=23','./favicon.ico','./manifest.webmanifest?v=23'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('shiftyar-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{

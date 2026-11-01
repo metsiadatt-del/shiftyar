@@ -26,7 +26,7 @@ function setup(protocol = 'file:', theme, dark = false) {
 test('HTML loads ordered classic scripts, not file-blocked modules', () => {
   const { document } = parseHTML(html);
   const scripts = [...document.querySelectorAll('script[src]')];
-  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=23', 'app.bundle.js?v=23']);
+  assert.deepEqual(scripts.map(s => s.getAttribute('src')), ['boot.js?v=23', 'app.bundle.js?v=24']);
   assert.ok(scripts.every(s => s.hasAttribute('defer') && s.type !== 'module'));
   assert.ok(document.querySelector('#startup').textContent.trim());
 });
@@ -78,7 +78,18 @@ test('Offline status waits for cache readiness and responds to connectivity with
  const env=setup('https:');let ready;env.context.navigator.serviceWorker.ready=new Promise(resolve=>{ready=resolve;});vm.runInContext(bundle,env.context);const main=env.document.querySelector('#main');assert.match(env.document.querySelector('[data-offline-status]').textContent,/آماده‌سازی/);ready({});await new Promise(resolve=>setTimeout(resolve,0));assert.match(env.document.querySelector('[data-offline-status]').textContent,/آمادهٔ استفاده آفلاین/);env.context.navigator.onLine=false;env.window.dispatchEvent(new env.window.Event('offline'));assert.match(env.document.querySelector('[data-offline-status]').textContent,/اطلاعات روی دستگاه/);assert.equal(env.document.querySelector('#main'),main);
 });
 test('Brand and approved icon are present in the actual delivered bundle',()=>{
- const env=setup();vm.runInContext(bundle,env.context);assert.match(env.document.title,/ShiftYar/);assert.equal(env.document.querySelector('.brand strong').textContent,'ShiftYar');assert.equal(env.document.querySelector('.app-icon').getAttribute('src'),'assets/shiftyar-192.png?v=23');assert.equal(env.document.querySelector('.topbar-center').textContent,'MET');
+ const env=setup();vm.runInContext(bundle,env.context);assert.match(env.document.title,/ShiftYar/);assert.equal(env.document.querySelector('.brand strong').textContent,'ShiftYar');assert.match(env.document.querySelector('.app-icon').getAttribute('src'),/^data:image\/png;base64,/);assert.equal(env.document.querySelector('.topbar-center').textContent,'MET');
+});
+test('Both brand images contain the approved PNG without an external image request',async()=>{
+ const png=await readFile(new URL('../assets/shiftyar-192.png',import.meta.url));
+ for(const protocol of ['file:','https:']){
+  const env=setup(protocol);vm.runInContext(bundle,env.context);
+  for(const selector of ['.brand-mark','.app-icon']){
+   const src=env.document.querySelector(selector).getAttribute('src');
+   assert.ok(src.startsWith('data:image/png;base64,'));
+   assert.deepEqual(Buffer.from(src.split(',')[1],'base64'),png);
+  }
+ }
 });
 test('A missing or failing bundle leaves an actionable message instead of a blank page', () => {
   const env = setup();
